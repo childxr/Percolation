@@ -15,6 +15,8 @@ public class Percolation {
 		this.N = N;
 		u = new WeightedQuickUnionUF(N*N);
 		this.openSite = new boolean[N*N];
+		for (int i = 0; i < N*N; i++)
+			this.openSite[i] = false;
 	}
 	   
 	// open site (row i, column j) if it is not already
@@ -34,12 +36,31 @@ public class Percolation {
 	   
 	   // is site (row i, column j) full?
 	public boolean isFull(int i, int j)   {
-	   return true;
+		
+		int grid = getGrid(i,j);
+		for (int k = 0; k < N; k++) {
+			if(openSite[k]) {
+				if (u.connected(k, grid))
+					return true;
+			}
+		}
+		return false;
 	}
 	   
 	   // does the system percolate?
 	public boolean percolates() {
-	  return true;
+	  for (int i = 1; i <= N; i++) {
+		  int p = getGrid(N,i);
+		  if (openSite[p]) {
+			  for (int j = 1; j <= N; j++) {
+				  int q = getGrid(1,j);
+				  if (openSite[q]) {
+					  if (u.connected(p, q)) return true;
+				  }
+			  }
+		  }
+	  }
+	  return false;
 	}
 	
 	// validate indexes

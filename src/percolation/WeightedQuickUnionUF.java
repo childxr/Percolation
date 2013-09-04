@@ -42,7 +42,6 @@ public class WeightedQuickUnionUF {
         return find(p) == find(q);
     }
 
-  
    // Replace sets containing p and q with their union.
     public void union(int p, int q) {
         int i = find(p);
