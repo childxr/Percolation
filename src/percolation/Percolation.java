@@ -86,10 +86,11 @@ public class Percolation {
 			p = i+1; q = j; break;
 		}
 		if (!validateIndexes(p,q)) return;
-		merge(i,j,p,q);
+		if (openSite[getGrid(p,q)])merge(i,j,p,q);
 	}
 	
 	private void merge(int i, int j, int p, int q) {
+		//System.out.println("merging ("+i+","+j+") and ("+p+","+q+")");
 		u.union(getGrid(i,j), getGrid(p,q));
 	}
 }
