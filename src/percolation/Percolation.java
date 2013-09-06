@@ -67,7 +67,7 @@ public class Percolation {
         validateIndex(i, j);
         int grid = getGrid(i, j);
         for (int k = 0; k < N; k++) {
-            if(openSite[k]) {
+            if (openSite[k]) {
                 if (u.connected(k, grid))
                     return true;
             }
@@ -92,8 +92,8 @@ public class Percolation {
 		  }
 	  }
 	  return false;
-	}
-	
+	  }
+    
 	/**
 	 * validate indexes with throwing exception
 	 * @param i row index
@@ -154,6 +154,7 @@ public class Percolation {
             p = i + 1; 
             q = j; 
             break;
+        default:
         }
         if (!validateIndexes(p, q)) 
             return;
