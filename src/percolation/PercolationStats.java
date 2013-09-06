@@ -13,8 +13,9 @@ package percolation;
  *----------------------------------------------------------------*/
 
 public class PercolationStats {
-    private double[] x;  // record the threshold for T trials
     private int T = 0;  // # of trials
+    private double sum = 0;  // sum of all threshold
+    private double sum2 = 0;  // square sum of all threshold
     
     /**
      * Constructor
@@ -22,10 +23,8 @@ public class PercolationStats {
      * @param T number of trials
      */
     public PercolationStats(int N, int T) {	
-        if (N >= 1 && T >= 1) {
-            this.T = T;
-            x = new double[T];
-        }
+    	if (N < 1 || T < 1) throw new IllegalArgumentException("N or T are illegal");
+        this.T = T;
         for (int i = 0; i < T; i++) {
             int count = 0;
             Percolation perc = new Percolation(N);
@@ -37,12 +36,10 @@ public class PercolationStats {
                     count++;
                 }
             }
-            x[i] = ((double) count) / (N * N);
+            double x = ((double) count) / (N * N);
+            sum += x;
+            sum2 += x * x;
         }
-        System.out.println("mean                    = " + mean());
-        System.out.println("stddev                  = " + stddev());
-        System.out.println("95% confidence interval = " + confidenceLo()
-				+ ", " + confidenceHi());
     }
     
     /**
@@ -50,10 +47,6 @@ public class PercolationStats {
      * @return mean of current simulation
      */
     public double mean() {
-        double sum = 0;
-        for (int i = 0; i < T; i++) {
-            sum += x[i];
-        }
         return sum / T;
     }
     
@@ -65,14 +58,7 @@ public class PercolationStats {
         if (T == 1)
             return Double.NaN;
         double mean = mean();
-        double sum = 0;
-        for (int i = 0; i < T; i++) {
-            sum += (x[i] - mean) * (x[i] - mean);
-        }
-        double test = Math.sqrt(sum / (T - 1));
-        System.out.println(test);
-        System.out.println(sum / (T - 1));
-        return sum / (T - 1);
+        return Math.sqrt((sum2 + T * mean * mean - 2 * mean * sum) / (T - 1));
     }
     
     /**
@@ -82,7 +68,7 @@ public class PercolationStats {
     public double confidenceLo() {
         double mean = mean();
         double stddev = stddev();
-        return mean - 1.96 * Math.sqrt(stddev) / Math.sqrt(T);
+        return mean - 1.96 * stddev / Math.sqrt(T);
     }
 
     /**
@@ -92,8 +78,7 @@ public class PercolationStats {
     public double confidenceHi() {
         double mean = mean();
         double stddev = stddev();
-        double confHigh = mean + 1.96 * Math.sqrt(stddev) / Math.sqrt(T);
-        return confHigh;
+        return mean + 1.96 * stddev / Math.sqrt(T);
     }
     
     /**
@@ -103,7 +88,11 @@ public class PercolationStats {
     public static void main(String[] args) {
         int N = Integer.parseInt(args[0]);
         int T = Integer.parseInt(args[1]);
-        if (N < 1 || T < 1) throw new IllegalArgumentException("N or T are illegal");
         PercolationStats stats = new PercolationStats(N, T);
+        
+        System.out.println("mean                    = " + stats.mean());
+        System.out.println("stddev                  = " + stats.stddev());
+        System.out.println("95% confidence interval = " + stats.confidenceLo() 
+                + ", " + stats.confidenceHi());
     }
 }

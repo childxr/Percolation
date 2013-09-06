@@ -14,11 +14,10 @@ package percolation;
 public class Percolation {
     private int N; // the number of each site
     private WeightedQuickUnionUF u;  // set data structure 
+    private WeightedQuickUnionUF uf;  // used for backwash problem
     private boolean[] openSite;  // array for indicating the opensite
-    private static final int LEFT = 0; // left indicator
-    private static final int RIGHT = 1;  // right indicator
-    private static final int TOP = 2;  // top indicator
-    private static final int DOWN = 3;  // down indicator
+    private int virtualTop;
+    private int virtualBottom;
     
     /**
      * 
@@ -27,12 +26,15 @@ public class Percolation {
      */
     public Percolation(int N) {
         this.N = N;
-        u = new WeightedQuickUnionUF(N * N);
+        u = new WeightedQuickUnionUF(N * N + 2);
+        uf = new WeightedQuickUnionUF(N * N + 2);
         this.openSite = new boolean[N * N];
         for (int i = 0; i < N * N; i++)
             this.openSite[i] = false;
+        virtualTop = getGrid(N, N) + 1;
+        virtualBottom = getGrid(N, N) + 2;
     }
-	
+   
     /**
      * open grid(i,j) if not opened
      * @param i row index
@@ -41,8 +43,15 @@ public class Percolation {
      */
     public void open(int i, int j)  {
         validateIndex(i, j);
-        openSite[getGrid(i, j)] = true;
-        for (int direction = LEFT; direction <= DOWN; direction++)
+        int grid = getGrid(i, j);
+        openSite[grid] = true;
+        if (i == 1 && !u.connected(grid, virtualTop)) {
+            u.union(grid, virtualTop);
+            uf.union(grid, virtualTop);
+        }
+        if (i == N && !u.connected(grid, virtualBottom)) u.union(grid, virtualBottom);
+        
+        for (int direction = 0; direction < 4; direction++)
           check(i, j, direction);
     }
     
@@ -56,7 +65,7 @@ public class Percolation {
         validateIndex(i, j);
         return openSite[getGrid(i, j)];
     }
-	
+    
     /**
      * check grid (i,j) full status
      * @param i row index
@@ -66,45 +75,28 @@ public class Percolation {
     public boolean isFull(int i, int j)   {
         validateIndex(i, j);
         int grid = getGrid(i, j);
-        for (int k = 0; k < N; k++) {
-            if (openSite[k]) {
-                if (u.connected(k, grid))
-                    return true;
-            }
-        }
-        return false;
+        return uf.connected(grid, virtualTop);
     }
     
     /**
      * check if the system percolate
      * @return true if the system percolate
      */
-	public boolean percolates() {
-	  for (int i = 1; i <= N; i++) {
-		  int p = getGrid(N, i);
-		  if (openSite[p]) {
-			  for (int j = 1; j <= N; j++) {
-				  int q = getGrid(1, j);
-				  if (openSite[q]) {
-					  if (u.connected(p, q)) return true;
-				  }
-			  }
-		  }
-	  }
-	  return false;
-	  }
+    public boolean percolates() {
+        return u.connected(virtualTop, virtualBottom);
+    }
     
-	/**
-	 * validate indexes with throwing exception
-	 * @param i row index
-	 * @param j column index
-	 * @return true if validation is positive
-	 */
+    /**
+     * validate indexes with throwing exception
+     * @param i row index
+     * @param j column index
+     * @return true if validation is positive
+     */
     private boolean validateIndex(int i, int j) {
         if (i <= 0 || j <= 0 || i > N || j > N) throw new IndexOutOfBoundsException("indexes i or j out of bounds");
         return true;
     }
-	
+    
     /**
      * validate indexes without throwing exception
      * @param i row index
@@ -117,7 +109,7 @@ public class Percolation {
         }
         return true;
     }
-	
+    
     /**
      * compute grid index in 1d
      * @param i row index
@@ -127,7 +119,7 @@ public class Percolation {
     private int getGrid(int i, int j) {
         return (i - 1) * N + (j - 1);
     }
-	
+    
     /**
      * check if neighbors are open and update connected parts
      * @param i row index
@@ -138,19 +130,19 @@ public class Percolation {
         int p = 0;
         int q = 0;
         switch (direction) {
-        case LEFT: 
+        case 0: // left
             p = i; 
             q = j - 1; 
             break;
-        case RIGHT: 
+        case 1: // right
             p = i; 
             q = j + 1; 
             break;
-        case TOP: 
+        case 2: // top
             p = i - 1; 
             q = j; 
             break;
-        case DOWN: 
+        case 3: // bottom
             p = i + 1; 
             q = j; 
             break;
@@ -161,7 +153,7 @@ public class Percolation {
         if (openSite[getGrid(p, q)]) 
             merge(i, j, p, q);
     }
-	
+    
     /**
      * merge two grid together
      * @param i row index for grid 1
@@ -171,5 +163,6 @@ public class Percolation {
      */
     private void merge(int i, int j, int p, int q) {
         u.union(getGrid(i, j), getGrid(p, q));
+        uf.union(getGrid(i, j), getGrid(p, q));
     }
 }
